@@ -1,42 +1,34 @@
 from dotenv import load_dotenv
 load_dotenv(override=True)
-from langchain import PromptTemplate, FewShotPromptTemplate, LLMChain
+from langchain import PromptTemplate, LLMChain
 from langchain.llms import OpenAI
 
+# Before executing the following code, make sure to have
+# your OpenAI key saved in the “OPENAI_API_KEY” environment variable.
 # Initialize LLM
-llm = OpenAI(model_name="gpt-3.5-turbo", temperature=0)
+llm = OpenAI(model_name="gpt-3.5-turbo-instruct", temperature=0)
 
-examples = [
-    {"color": "red", "emotion": "passion"},
-    {"color": "blue", "emotion": "serenity"},
-    {"color": "green", "emotion": "tranquility"},
-]
-
-example_formatter_template = """
-Color: {color}
-Emotion: {emotion}\n
+template = """
+As a futuristic robot band conductor, I need you to help me come up with a song title.
+What's a cool song title for a song about {theme} in the year {year}?
 """
-example_prompt = PromptTemplate(
-    input_variables=["color", "emotion"],
-    template=example_formatter_template,
+prompt = PromptTemplate(
+    input_variables=["theme", "year"],
+    template=template,
 )
-
-few_shot_prompt = FewShotPromptTemplate(
-    examples=examples,
-    example_prompt=example_prompt,
-    prefix="Here are some examples of colors and the emotions associated with them:\n\n",
-    suffix="\n\nNow, given a new color, identify the emotion associated with it:\n\nColor: {input}\nEmotion:",
-    input_variables=["input"],
-    example_separator="\n",
-)
-
-formatted_prompt = few_shot_prompt.format(input="crimson red")
 
 # Create the LLMChain for the prompt
-chain = LLMChain(llm=llm, prompt=PromptTemplate(template=formatted_prompt, input_variables=[]))
+llm = OpenAI(model_name="gpt-3.5-turbo", temperature=0)
 
-# Run the LLMChain to get the AI-generated emotion associated with the input color
-response = chain.run({})
+# Input data for the prompt
+input_data = {"theme": "interstellar travel", "year": "3030"}
 
-print("Color: crimson red")
-print("Emotion:", response)
+# Create LLMChain
+chain = LLMChain(llm=llm, prompt=prompt)
+
+# Run the LLMChain to get the AI-generated song title
+response = chain.run(input_data)
+
+print("Theme: interstellar travel")
+print("Year: 3030")
+print("AI-generated song title:", response)
