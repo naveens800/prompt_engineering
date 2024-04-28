@@ -3,32 +3,36 @@ load_dotenv(override=True)
 from langchain import PromptTemplate, LLMChain
 from langchain.llms import OpenAI
 
-# Before executing the following code, make sure to have
-# your OpenAI key saved in the “OPENAI_API_KEY” environment variable.
 # Initialize LLM
-llm = OpenAI(model_name="gpt-3.5-turbo-instruct", temperature=0)
-
-template = """
-As a futuristic robot band conductor, I need you to help me come up with a song title.
-What's a cool song title for a song about {theme} in the year {year}?
-"""
-prompt = PromptTemplate(
-    input_variables=["theme", "year"],
-    template=template,
-)
-
-# Create the LLMChain for the prompt
 llm = OpenAI(model_name="gpt-3.5-turbo", temperature=0)
 
-# Input data for the prompt
-input_data = {"theme": "interstellar travel", "year": "3030"}
+# Prompt 1
+template_question = """What is the name of the famous scientist who developed the theory of general relativity?
+Answer: """
+prompt_question = PromptTemplate(template=template_question, input_variables=[])
 
-# Create LLMChain
-chain = LLMChain(llm=llm, prompt=prompt)
+# Prompt 2
+template_fact = """Provide a brief description of {scientist}'s theory of general relativity.
+Answer: """
+prompt_fact = PromptTemplate(input_variables=["scientist"], template=template_fact)
 
-# Run the LLMChain to get the AI-generated song title
-response = chain.run(input_data)
+# Create the LLMChain for the first prompt
+chain_question = LLMChain(llm=llm, prompt=prompt_question)
 
-print("Theme: interstellar travel")
-print("Year: 3030")
-print("AI-generated song title:", response)
+# Run the LLMChain for the first prompt with an empty dictionary
+response_question = chain_question.run({})
+
+# Extract the scientist's name from the response
+scientist = response_question.strip()
+
+# Create the LLMChain for the second prompt
+chain_fact = LLMChain(llm=llm, prompt=prompt_fact)
+
+# Input data for the second prompt
+input_data = {"scientist": scientist}
+
+# Run the LLMChain for the second prompt
+response_fact = chain_fact.run(input_data)
+
+print("Scientist:", scientist)
+print("Fact:", response_fact)
