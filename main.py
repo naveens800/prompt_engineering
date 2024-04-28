@@ -1,38 +1,57 @@
 from dotenv import load_dotenv
 load_dotenv(override=True)
-from langchain import PromptTemplate, LLMChain
+from langchain import FewShotPromptTemplate, PromptTemplate, LLMChain
 from langchain.llms import OpenAI
 
 # Initialize LLM
 llm = OpenAI(model_name="gpt-3.5-turbo", temperature=0)
 
-# Prompt 1
-template_question = """What is the name of the famous scientist who developed the theory of general relativity?
-Answer: """
-prompt_question = PromptTemplate(template=template_question, input_variables=[])
+examples = [
+    {
+        "query": "What's the secret to happiness?",
+        "answer": "Finding balance in life and learning to enjoy the small moments."
+    }, {
+        "query": "How can I become more productive?",
+        "answer": "Try prioritizing tasks, setting goals, and maintaining a healthy work-life balance."
+    }
+]
 
-# Prompt 2
-template_fact = """Provide a brief description of {scientist}'s theory of general relativity.
-Answer: """
-prompt_fact = PromptTemplate(input_variables=["scientist"], template=template_fact)
+example_template = """
+User: {query}
+AI: {answer}
+"""
 
-# Create the LLMChain for the first prompt
-chain_question = LLMChain(llm=llm, prompt=prompt_question)
+example_prompt = PromptTemplate(
+    input_variables=["query", "answer"],
+    template=example_template
+)
 
-# Run the LLMChain for the first prompt with an empty dictionary
-response_question = chain_question.run({})
+prefix = """The following are excerpts from conversations with an AI
+life coach. The assistant provides insightful and practical advice to the users' questions. Here are some
+examples: 
+"""
 
-# Extract the scientist's name from the response
-scientist = response_question.strip()
+suffix = """
+User: {query}
+AI: """
 
-# Create the LLMChain for the second prompt
-chain_fact = LLMChain(llm=llm, prompt=prompt_fact)
+few_shot_prompt_template = FewShotPromptTemplate(
+    examples=examples,
+    example_prompt=example_prompt,
+    prefix=prefix,
+    suffix=suffix,
+    input_variables=["query"],
+    example_separator="\n\n"
+)
 
-# Input data for the second prompt
-input_data = {"scientist": scientist}
+# Create the LLMChain for the few-shot prompt template
+chain = LLMChain(llm=llm, prompt=few_shot_prompt_template)
 
-# Run the LLMChain for the second prompt
-response_fact = chain_fact.run(input_data)
+# Define the user query
+user_query = "What are some tips for improving communication skills?"
 
-print("Scientist:", scientist)
-print("Fact:", response_fact)
+# Run the LLMChain for the user query
+response = chain.run({"query": user_query})
+
+print("User Query:", user_query)
+print("AI Response:", response)
